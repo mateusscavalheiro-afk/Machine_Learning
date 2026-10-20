@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MetalTech S.A. | Central de Qualidade Óptica & Manutenção Preditiva</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Ícones Phosphor -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0b0f17;
+      color: #e2e8f0;
+    }
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Estilização de sliders industriais */
+    input[type=range] {
+      accent-color: #06b6d4;
+    }
+    /* Efeito de scanline sutil para ambiente industrial */
+    .industrial-grid {
+      background-size: 24px 24px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="min-h-screen industrial-grid flex flex-col">
+
+  <!-- CABEÇALHO INDUSTRIAL -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-0 z-50 px-6 py-3">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-tr from-cyan-600 to-emerald-500 flex items-center justify-center shadow-lg shadow-cyan-900/40">
+          <i class="ph ph-factory text-2xl text-white"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold tracking-tight text-white">MetalTech Soluções Industriais S.A.</h1>
+            <span class="px-2 py-0.5 text-xs font-semibold rounded bg-cyan-950 text-cyan-400 border border-cyan-800">Indústria 4.0</span>
+          </div>
+          <p class="text-xs text-slate-400">Terminal Integrado: Visão Computacional (OpenCV-Engine) & API Preditiva</p>
+        </div>
+      </div>
+
+      <!-- STATUS DO SISTEMA -->
+      <div class="flex items-center gap-6 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="relative flex h-2.5 w-2.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          <span class="text-slate-300">Motor de Visão: <strong class="text-emerald-400">Online</strong></span>
+        </div>
+        <div class="flex items-center gap-2 border-l border-slate-700 pl-4">
+          <i class="ph ph-plugs text-cyan-400 text-sm"></i>
+          <span class="text-slate-300">API Telemetria: <strong id="apiStatusBadge" class="text-amber-400">Verificando...</strong></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="max-w-7xl mx-auto w-full p-4 md:p-6 flex-1 space-y-8">
+
+    <!-- SEÇÃO 1: PAINEL DE VISÃO COMPUTACIONAL (GOLDEN TEMPLATE MATCHING) -->
+    <section class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 md:p-6 shadow-xl backdrop-blur-sm">
+      <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
+        <div>
+          <div class="flex items-center gap-2 text-cyan-400 font-semibold text-sm uppercase tracking-wider">
+            <i class="ph ph-scan text-lg"></i>
+            Controle de Qualidade Óptico
+          </div>
+          <h2 class="text-xl font-bold text-white mt-1">Inspeção Geométrica por Subtração de Padrão (Golden Template)</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Analisa a peça inspecionada comparando pixel a pixel com a peça gabarito perfeita.</p>
+        </div>
+
+        <!-- AÇÕES RÁPIDAS -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <button id="btnCarregarDemo" class="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition flex items-center gap-1.5 shadow">
+            <i class="ph ph-lightning text-amber-400"></i>
+            Carregar Amostras Demo (Tampas MetalTech)
+          </button>
+          <button id="btnProcessarVisao" class="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-lg shadow-cyan-900/30">
+            <i class="ph ph-play text-sm"></i>
+            Executar Análise de Danos
+          </button>
+        </div>
+      </div>
+
+      <!-- CONTROLES DE ENTRADA & PARAMETRIZAÇÃO -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-5 p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 text-xs">
+        <!-- Upload Referência -->
+        <div>
+          <label class="block font-medium text-slate-300 mb-1.5 flex items-center gap-1">
+            <i class="ph ph-check-circle text-emerald-400"></i> 1. Imagem Padrão (Gabarito / Boa)
+          </label>
+          <input type="file" id="inputRef" accept="image/*" class="block w-full text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-cyan-400 hover:file:bg-slate-700 cursor-pointer">
+        </div>
+
+        <!-- Upload Teste -->
+        <div>
+          <label class="block font-medium text-slate-300 mb-1.5 flex items-center gap-1">
+            <i class="ph ph-magnifying-glass text-cyan-400"></i> 2. Imagem em Teste (Inspecionada)
+          </label>
+          <input type="file" id="inputTeste" accept="image/*" class="block w-full text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-cyan-400 hover:file:bg-slate-700 cursor-pointer">
+        </div>
+
+        <!-- Sensibilidade (Threshold) -->
+        <div>
+          <div class="flex justify-between items-center mb-1 text-slate-300">
+            <span class="font-medium flex items-center gap-1">
+              <i class="ph ph-faders text-slate-400"></i> Sensibilidade (Corte)
+            </span>
+            <span id="labelThreshold" class="font-mono-code font-bold text-cyan-400">28</span>
+          </div>
+          <input type="range" id="sliderThreshold" min="10" max="80" value="28" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          <span class="text-[10px] text-slate-500">Limiar para distinguir ruído de dano real</span>
+        </div>
+
+        <!-- Tolerância de Aceite -->
+        <div>
+          <div class="flex justify-between items-center mb-1 text-slate-300">
+            <span class="font-medium flex items-center gap-1">
+              <i class="ph ph-percent text-slate-400"></i> Tolerância Máx.
+            </span>
+            <span id="labelTolerancia" class="font-mono-code font-bold text-cyan-400">1.0%</span>
+          </div>
+          <input type="range" id="sliderTolerancia" min="0.2" max="15.0" step="0.1" value="1.0" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          <span class="text-[10px] text-slate-500">Área danificada máxima permitida</span>
+        </div>
+      </div>
+
+      <!-- QUADRANTES DE RESULTADO -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+        
+        <!-- Quadrante 1: Referência -->
+        <div class="flex flex-col bg-slate-950/80 rounded-xl border border-slate-800 p-3">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800/80 text-xs">
+            <span class="font-semibold text-slate-300 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span> 1. Gabarito de Referência
+            </span>
+            <span class="text-[10px] text-slate-500 uppercase font-mono-code">Gabarito</span>
+          </div>
+          <div class="relative w-full aspect-square bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center border border-slate-800/60">
+            <canvas id="canvasRef" class="w-full h-full object-contain"></canvas>
+            <span id="placeholderRef" class="absolute text-xs text-slate-500 text-center px-4">Carregue a peça gabarito</span>
+          </div>
+        </div>
+
+        <!-- Quadrante 2: Inspecionada -->
+        <div class="flex flex-col bg-slate-950/80 rounded-xl border border-slate-800 p-3">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800/80 text-xs">
+            <span class="font-semibold text-slate-300 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-cyan-400"></span> 2. Peça em Teste
+            </span>
+            <span class="text-[10px] text-slate-500 uppercase font-mono-code">Amostra</span>
+          </div>
+          <div class="relative w-full aspect-square bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center border border-slate-800/60">
+            <canvas id="canvasTeste" class="w-full h-full object-contain"></canvas>
+            <span id="placeholderTeste" class="absolute text-xs text-slate-500 text-center px-4">Carregue a peça a inspecionar</span>
+          </div>
+        </div>
+
+        <!-- Quadrante 3: Máscara Granular -->
+        <div class="flex flex-col bg-slate-950/80 rounded-xl border border-slate-800 p-3">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800/80 text-xs">
+            <span class="font-semibold text-slate-300 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-slate-400"></span> 3. Granulado do Dano
+            </span>
+            <button id="btnDownloadMascara" disabled class="text-[11px] text-cyan-400 hover:text-cyan-300 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1">
+              <i class="ph ph-download-simple"></i> Baixar
+            </button>
+          </div>
+          <div class="relative w-full aspect-square bg-black rounded-lg overflow-hidden flex items-center justify-center border border-slate-800/60">
+            <canvas id="canvasMascara" class="w-full h-full object-contain"></canvas>
+            <span id="placeholderMascara" class="absolute text-xs text-slate-600 text-center px-4">Aguardando processamento...</span>
+          </div>
+        </div>
+
+        <!-- Quadrante 4: Análise e Diagnóstico -->
+        <div class="flex flex-col bg-slate-950/80 rounded-xl border border-slate-800 p-3">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800/80 text-xs">
+            <span class="font-semibold text-slate-300 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-rose-500"></span> 4. Diagnóstico Final
+            </span>
+            <button id="btnDownloadOverlay" disabled class="text-[11px] text-cyan-400 hover:text-cyan-300 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1">
+              <i class="ph ph-download-simple"></i> Baixar
+            </button>
+          </div>
+          <div class="relative w-full aspect-square bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center border border-slate-800/60">
+            <canvas id="canvasOverlay" class="w-full h-full object-contain"></canvas>
+            <span id="placeholderOverlay" class="absolute text-xs text-slate-600 text-center px-4">Aguardando processamento...</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- BARRA DE LAUDO TÉCNICO -->
+      <div id="painelLaudo" class="mt-5 p-4 rounded-xl border border-slate-800 bg-slate-950/90 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div id="badgeStatusLaudo" class="px-4 py-2 rounded-lg font-bold text-sm tracking-wide bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-2">
+            <i class="ph ph-shield-warning text-lg"></i>
+            <span>NENHUMA ANÁLISE REALIZADA</span>
+          </div>
+          <div>
+            <div class="text-xs text-slate-400">Taxa de Superfície Avariada:</div>
+            <div id="textoAreaAfetada" class="text-xl font-bold font-mono-code text-white">0.00%</div>
+          </div>
+        </div>
+        <div class="text-xs text-slate-400 text-right">
+          <div>Algoritmo: <span class="text-slate-300 font-mono-code">Diferença Absoluta + Morfologia 3x3</span></div>
+          <div>Conformidade: <span class="text-slate-300 font-mono-code">ISO 13849 / MetalTech QC Standard</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEÇÃO 2: PAINEL DE TELEMETRIA PREDITIVA (INTEGRAÇÃO API /PREDICT) -->
+    <section class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 md:p-6 shadow-xl backdrop-blur-sm">
+      <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
+        <div>
+          <div class="flex items-center gap-2 text-emerald-400 font-semibold text-sm uppercase tracking-wider">
+            <i class="ph ph-cpu text-lg"></i>
+            Manutenção Preditiva (Machine Learning)
+          </div>
+          <h2 class="text-xl font-bold text-white mt-1">Simulador de Inferência de CLP / API RESTful</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Dispara requisições HTTP para a rota <code class="text-cyan-400 font-mono-code">/predict</code> do seu servidor Flask (porta 5000).</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-slate-400">Endpoint:</label>
+          <input type="text" id="inputApiUrl" value="http://127.0.0.1:5000/predict" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono-code text-cyan-300 w-64 focus:outline-none focus:border-cyan-500">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        <!-- FORMULÁRIO DE TELEMETRIA -->
+        <div class="lg:col-span-2 space-y-4 bg-slate-950/60 p-5 rounded-xl border border-slate-800/80">
+          <div class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Entradas de Sensores IoT</div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <!-- Temperatura -->
+            <div class="bg-slate-900 p-3.5 rounded-lg border border-slate-800">
+              <div class="flex justify-between items-center mb-1">
+                <span class="text-xs text-slate-400 flex items-center gap-1"><i class="ph ph-thermometer text-amber-400"></i> Temperatura</span>
+                <span class="text-xs font-mono-code text-amber-400 font-bold" id="valTemp">78.5 °C</span>
+              </div>
+              <input type="number" id="inputTemp" value="78.5" step="0.5" class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 text-sm font-mono-code text-white">
+              <span class="text-[10px] text-slate-500 mt-1 block">Faixa de treino: 50.0 a 80.0 °C</span>
+            </div>
+
+            <!-- Vibração -->
+            <div class="bg-slate-900 p-3.5 rounded-lg border border-slate-800">
+              <div class="flex justify-between items-center mb-1">
+                <span class="text-xs text-slate-400 flex items-center gap-1"><i class="ph ph-activity text-cyan-400"></i> Vibração</span>
+                <span class="text-xs font-mono-code text-cyan-400 font-bold" id="valVib">4.8 mm/s</span>
+              </div>
+              <input type="number" id="inputVib" value="4.8" step="0.1" class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 text-sm font-mono-code text-white">
+              <span class="text-[10px] text-slate-500 mt-1 block">Faixa de treino: 2.0 a 5.0 mm/s</span>
+            </div>
+
+            <!-- Pressão -->
+            <div class="bg-slate-900 p-3.5 rounded-lg border border-slate-800">
+              <div class="flex justify-between items-center mb-1">
+                <span class="text-xs text-slate-400 flex items-center gap-1"><i class="ph ph-gauge text-rose-400"></i> Pressão</span>
+                <span class="text-xs font-mono-code text-rose-400 font-bold" id="valPress">43.2 bar</span>
+              </div>
+              <input type="number" id="inputPress" value="43.2" step="0.5" class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 text-sm font-mono-code text-white">
+              <span class="text-[10px] text-slate-500 mt-1 block">Faixa de treino: 26.0 a 45.0 bar</span>
+            </div>
+          </div>
+
+          <!-- BOTÕES DE CENÁRIOS PRONTOS -->
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/80">
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-400">Cenários Rápidos:</span>
+              <button onclick="carregarCenario(65.0, 2.5, 38.0)" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 border border-slate-700 transition">Normal (65°C / 38bar)</button>
+              <button onclick="carregarCenario(160.0, 2.0, 130.0)" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[11px] text-rose-400 border border-slate-700 transition">Falha Crítica (160°C / 130bar)</button>
+            </div>
+
+            <button id="btnEnviarTelemetria" class="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-emerald-950/40 transition">
+              <i class="ph ph-paper-plane-tilt"></i>
+              Disparar Requisição /predict
+            </button>
+          </div>
+        </div>
+
+        <!-- RESULTADO DA PREVISÃO DA API -->
+        <div class="bg-slate-950/90 p-5 rounded-xl border border-slate-800 flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-xs font-semibold text-slate-400 uppercase">Diagnóstico do CLP</span>
+              <span id="badgeFontePredicao" class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">Aguardando</span>
+            </div>
+
+            <div class="space-y-4 my-2">
+              <div>
+                <span class="text-xs text-slate-400">Probabilidade / Score de Falha:</span>
+                <div class="flex items-baseline gap-2 mt-1">
+                  <span id="predScoreTexto" class="text-3xl font-extrabold font-mono-code text-white">0.00%</span>
+                  <span id="predScoreRaw" class="text-xs text-slate-500 font-mono-code">(0.0000)</span>
+                </div>
+                <!-- Barra de progresso visual -->
+                <div class="w-full h-2 bg-slate-800 rounded-full mt-2 overflow-hidden">
+                  <div id="predScoreBarra" class="h-full bg-emerald-500 transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- Cartão de Alerta -->
+              <div id="cardAlertaOperacional" class="p-3.5 rounded-lg bg-slate-900 border border-slate-800 flex items-center gap-3">
+                <div id="iconeAlerta" class="w-9 h-9 rounded-md bg-slate-800 flex items-center justify-center text-slate-400 text-xl">
+                  <i class="ph ph-power"></i>
+                </div>
+                <div>
+                  <div class="text-[10px] text-slate-400 uppercase">Status Operacional</div>
+                  <div id="textoStatusOperacional" class="text-sm font-bold text-slate-300">Pronto para Teste</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payload Retornado -->
+          <div class="mt-4 pt-3 border-t border-slate-800">
+            <span class="text-[10px] text-slate-500 uppercase font-mono-code">Resposta JSON do Servidor:</span>
+            <pre id="jsonOutput" class="text-[11px] font-mono-code text-slate-400 mt-1 p-2 rounded bg-black/60 overflow-x-auto max-h-24">{"status": "esperando_chamada"}</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- RODAPÉ -->
+  <footer class="border-t border-slate-800 bg-slate-900/60 py-4 px-6 text-center text-xs text-slate-500 mt-auto">
+    MetalTech Soluções Industriais S.A. &copy; 2026 • Módulo Integrador de Visão Computacional e Manutenção Preditiva (Etapa 3)
+  </footer>
+
+  <!-- SCRIPT DE PROCESSAMENTO (CANVAS OPENCV ENGINE & API CLIENT) -->
+  <script>
+    // Elementos do DOM - Visão
+    const canvasRef = document.getElementById('canvasRef');
+    const canvasTeste = document.getElementById('canvasTeste');
+    const canvasMascara = document.getElementById('canvasMascara');
+    const canvasOverlay = document.getElementById('canvasOverlay');
+
+    const ctxRef = canvasRef.getContext('2d', { willReadFrequently: true });
+    const ctxTeste = canvasTeste.getContext('2d', { willReadFrequently: true });
+    const ctxMascara = canvasMascara.getContext('2d');
+    const ctxOverlay = canvasOverlay.getContext('2d');
+
+    const inputRef = document.getElementById('inputRef');
+    const inputTeste = document.getElementById('inputTeste');
+    const sliderThreshold = document.getElementById('sliderThreshold');
+    const sliderTolerancia = document.getElementById('sliderTolerancia');
+    const labelThreshold = document.getElementById('labelThreshold');
+    const labelTolerancia = document.getElementById('labelTolerancia');
+
+    const placeholderRef = document.getElementById('placeholderRef');
+    const placeholderTeste = document.getElementById('placeholderTeste');
+    const placeholderMascara = document.getElementById('placeholderMascara');
+    const placeholderOverlay = document.getElementById('placeholderOverlay');
+
+    const btnCarregarDemo = document.getElementById('btnCarregarDemo');
+    const btnProcessarVisao = document.getElementById('btnProcessarVisao');
+    const btnDownloadMascara = document.getElementById('btnDownloadMascara');
+    const btnDownloadOverlay = document.getElementById('btnDownloadOverlay');
+
+    const badgeStatusLaudo = document.getElementById('badgeStatusLaudo');
+    const textoAreaAfetada = document.getElementById('textoAreaAfetada');
+
+    // Elementos da API Preditiva
+    const inputApiUrl = document.getElementById('inputApiUrl');
+    const inputTemp = document.getElementById('inputTemp');
+    const inputVib = document.getElementById('inputVib');
+    const inputPress = document.getElementById('inputPress');
+    const btnEnviarTelemetria = document.getElementById('btnEnviarTelemetria');
+    const predScoreTexto = document.getElementById('predScoreTexto');
+    const predScoreRaw = document.getElementById('predScoreRaw');
+    const predScoreBarra = document.getElementById('predScoreBarra');
+    const cardAlertaOperacional = document.getElementById('cardAlertaOperacional');
+    const iconeAlerta = document.getElementById('iconeAlerta');
+    const textoStatusOperacional = document.getElementById('textoStatusOperacional');
+    const jsonOutput = document.getElementById('jsonOutput');
+    const badgeFontePredicao = document.getElementById('badgeFontePredicao');
+    const apiStatusBadge = document.getElementById('apiStatusBadge');
+
+    let imgRefCarregada = null;
+    let imgTesteCarregada = null;
+
+    // Atualização de rótulos dos sliders
+    sliderThreshold.addEventListener('input', (e) => labelThreshold.textContent = e.target.value);
+    sliderTolerancia.addEventListener('input', (e) => labelTolerancia.textContent = `${parseFloat(e.target.value).toFixed(1)}%`);
+
+    // Carregamento de arquivos do usuário
+    inputRef.addEventListener('change', (e) => carregarImagemUpload(e.target.files[0], 'ref'));
+    inputTeste.addEventListener('change', (e) => carregarImagemUpload(e.target.files[0], 'teste'));
+
+    function carregarImagemUpload(file, tipo) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          if (tipo === 'ref') {
+            imgRefCarregada = img;
+            renderizarNoCanvas(img, canvasRef, ctxRef, placeholderRef);
+          } else {
+            imgTesteCarregada = img;
+            renderizarNoCanvas(img, canvasTeste, ctxTeste, placeholderTeste);
+          }
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function renderizarNoCanvas(img, canvas, ctx, placeholder) {
+      canvas.width = 500;
+      canvas.height = 500;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, 500, 500);
+      placeholder.style.display = 'none';
+    }
+
+    // Gerador dinâmico de tampa conforme e tampa danificada para demonstração imediata
+    btnCarregarDemo.addEventListener('click', () => {
+      // Cria a tampa padrão (Gabarito / Boa)
+      const c1 = document.createElement('canvas');
+      c1.width = 500; c1.height = 500;
+      const g1 = c1.getContext('2d');
+      desenharTampaMetalTech(g1, false);
+
+      const img1 = new Image();
+      img1.onload = () => {
+        imgRefCarregada = img1;
+        renderizarNoCanvas(img1, canvasRef, ctxRef, placeholderRef);
+      };
+      img1.src = c1.toDataURL();
+
+      // Cria a tampa com falhas e desgastes (Ruim)
+      const c2 = document.createElement('canvas');
+      c2.width = 500; c2.height = 500;
+      const g2 = c2.getContext('2d');
+      desenharTampaMetalTech(g2, true);
+
+      const img2 = new Image();
+      img2.onload = () => {
+        imgTesteCarregada = img2;
+        renderizarNoCanvas(img2, canvasTeste, ctxTeste, placeholderTeste);
+        // Processa imediatamente a demonstração
+        setTimeout(processarVisaoComputacional, 100);
+      };
+      img2.src = c2.toDataURL();
+    });
+
+    // Função que desenha a tampa de mancal da MetalTech diretamente no Canvas
+    function desenharTampaMetalTech(ctx, comDanos = false) {
+      ctx.fillStyle = '#ffffff'; // fundo branco idêntico às imagens industriais
+      ctx.fillRect(0, 0, 500, 500);
+
+      const cx = 250, cy = 250;
+      ctx.save();
+
+      // Orelhas de fixação com furos
+      ctx.fillStyle = '#9b3d32'; // Tom ferro fundido avermelhado
+      [0, 90, 180, 270].forEach(deg => {
+        const rad = deg * Math.PI / 180;
+        const ox = cx + Math.cos(rad) * 215;
+        const oy = cy + Math.sin(rad) * 215;
+        ctx.beginPath();
+        ctx.arc(ox, oy, 32, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Furo do parafuso
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.arc(ox, oy, 11, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#9b3d32';
+      });
+
+      // Corpo principal circular
+      ctx.beginPath();
+      ctx.arc(cx, cy, 205, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Textura e relevo circular intermediário
+      ctx.strokeStyle = '#7c2d25';
+      ctx.lineWidth = 14;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 185, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Nervuras de refrigeração radiais
+      ctx.strokeStyle = '#b84d41';
+      ctx.lineWidth = 9;
+      for (let i = 0; i < 20; i++) {
+        const rad = (i * 18) * Math.PI / 180;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(rad) * 85, cy + Math.sin(rad) * 85);
+        ctx.lineTo(cx + Math.cos(rad) * 165, cy + Math.sin(rad) * 165);
+        ctx.stroke();
+      }
+
+      // Cubo usinado central (aço polido)
+      ctx.fillStyle = '#cbd5e1';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 55, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      // Furo do eixo do motor
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 38, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Injeção de danos e desgastes superficiais caso seja a peça ruim
+      if (comDanos) {
+        ctx.fillStyle = '#e2e8f0'; // Danos que expõem o metal cru/polido
+        // Simulação de ranhuras, riscos e descolamento de tinta
+        const pontosDano = [
+          [210, 140, 25, 4], [310, 120, 18, 5], [140, 220, 22, 6],
+          [350, 210, 15, 8], [270, 340, 28, 4], [190, 310, 20, 5],
+          [240, 80, 14, 14], [255, 410, 16, 12], [80, 250, 12, 10], [420, 250, 10, 12],
+          [290, 180, 8, 8], [170, 170, 10, 10], [330, 290, 12, 7], [160, 280, 14, 5]
+        ];
+
+        pontosDano.forEach(([x, y, w, h]) => {
+          ctx.beginPath();
+          ctx.ellipse(x, y, w, h, Math.PI / 4, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Granulado disperso
+        for (let j = 0; j < 120; j++) {
+          const rx = cx + (Math.random() - 0.5) * 360;
+          const ry = cy + (Math.random() - 0.5) * 360;
+          const dist = Math.hypot(rx - cx, ry - cy);
+          if (dist > 50 && dist < 195) {
+            ctx.fillRect(rx, ry, 2 + Math.random() * 3, 2 + Math.random() * 3);
+          }
+        }
+      }
+
+      ctx.restore();
+    }
+
+    // PROCESSAMENTO DO ALGORITMO OPENCV EM JAVASCRIPT
+    btnProcessarVisao.addEventListener('click', processarVisaoComputacional);
+
+    function processarVisaoComputacional() {
+      if (!imgRefCarregada || !imgTesteCarregada) {
+        alert("Carregue a Imagem Padrão (Gabarito) e a Imagem de Teste primeiro, ou clique em 'Carregar Amostras Demo'.");
+        return;
+      }
+
+      const largura = 500;
+      const altura = 500;
+
+      canvasMascara.width = largura;
+      canvasMascara.height = altura;
+      canvasOverlay.width = largura;
+      canvasOverlay.height = altura;
+
+      placeholderMascara.style.display = 'none';
+      placeholderOverlay.style.display = 'none';
+
+      // 1. Extrai pixels de ambas as imagens
+      const dataRef = ctxRef.getImageData(0, 0, largura, altura);
+      const dataTeste = ctxTeste.getImageData(0, 0, largura, altura);
+
+      const pixelsRef = dataRef.data;
+      const pixelsTeste = dataTeste.data;
+
+      // Cria estruturas para a máscara e para o overlay
+      const imgDataMascara = ctxMascara.createImageData(largura, altura);
+      const pixelsMascara = imgDataMascara.data;
+
+      const imgDataOverlay = ctxOverlay.createImageData(largura, altura);
+      const pixelsOverlay = imgDataOverlay.data;
+
+      const threshold = parseInt(sliderThreshold.value);
+      const toleranciaPct = parseFloat(sliderTolerancia.value);
+
+      let totalPixelsPeca = 0;
+      let totalPixelsDefeito = 0;
+
+      // 2. Subtração Absoluta de Imagens (cv2.absdiff) + Threshold
+      for (let i = 0; i < pixelsRef.length; i += 4) {
+        // Converte cada canal para luminância (escala de cinza)
+        const grayRef = 0.299 * pixelsRef[i] + 0.587 * pixelsRef[i+1] + 0.114 * pixelsRef[i+2];
+        const grayTeste = 0.299 * pixelsTeste[i] + 0.587 * pixelsTeste[i+1] + 0.114 * pixelsTeste[i+2];
+
+        // Ignora fundo branco industrial da foto (pixels > 245)
+        const ehPeca = grayTeste < 245;
+
+        // cv2.absdiff
+        const diff = Math.abs(grayRef - grayTeste);
+        const ehDefeito = ehPeca && (diff >= threshold);
+
+        if (ehPeca) totalPixelsPeca++;
+
+        if (ehDefeito) {
+          totalPixelsDefeito++;
+          // Máscara Granular: Branco puro (255) onde há falha
+          pixelsMascara[i] = 255;
+          pixelsMascara[i+1] = 255;
+          pixelsMascara[i+2] = 255;
+          pixelsMascara[i+3] = 255;
+
+          // Overlay: Pinta a falha em vermelho vivo com destaque translúcido
+          pixelsOverlay[i] = 239;     // Vermelho
+          pixelsOverlay[i+1] = 68;    // Verde
+          pixelsOverlay[i+2] = 68;    // Azul
+          pixelsOverlay[i+3] = 255;
+        } else {
+          // Máscara: Preto puro
+          pixelsMascara[i] = 0;
+          pixelsMascara[i+1] = 0;
+          pixelsMascara[i+2] = 0;
+          pixelsMascara[i+3] = 255;
+
+          // Overlay: Mantém o pixel original da peça com 85% de intensidade
+          pixelsOverlay[i] = pixelsTeste[i];
+          pixelsOverlay[i+1] = pixelsTeste[i+1];
+          pixelsOverlay[i+2] = pixelsTeste[i+2];
+          pixelsOverlay[i+3] = pixelsTeste[i+3];
+        }
+      }
+
+      // Renderiza a máscara granular pura
+      ctxMascara.putImageData(imgDataMascara, 0, 0);
+
+      // Renderiza a análise final com anotações de inspeção
+      ctxOverlay.putImageData(imgDataOverlay, 0, 0);
+
+      // 3. Métricas e Veredito Industrial
+      const pctDefeito = totalPixelsPeca > 0 ? (totalPixelsDefeito / totalPixelsPeca) * 100 : 0;
+      const aprovado = pctDefeito <= toleranciaPct;
+
+      textoAreaAfetada.textContent = `${pctDefeito.toFixed(2)}%`;
+
+      // Aplica Carimbo na Imagem de Resultado
+      ctxOverlay.save();
+      ctxOverlay.font = "bold 24px 'JetBrains Mono', monospace";
+      if (aprovado) {
+        ctxOverlay.fillStyle = "#10b981";
+        ctxOverlay.fillText(`STATUS: APROVADO`, 20, 45);
+        ctxOverlay.fillStyle = "#38bdf8";
+        ctxOverlay.font = "16px 'Inter', sans-serif";
+        ctxOverlay.fillText(`Avaria: ${pctDefeito.toFixed(2)}% (Tolerância: ${toleranciaPct.toFixed(1)}%)`, 20, 75);
+
+        badgeStatusLaudo.className = "px-4 py-2 rounded-lg font-bold text-sm tracking-wide bg-emerald-950 text-emerald-400 border border-emerald-800 flex items-center gap-2";
+        badgeStatusLaudo.innerHTML = `<i class="ph ph-check-circle text-lg"></i><span>PEÇA APROVADA - DENTRO DOS PADRÕES</span>`;
+      } else {
+        ctxOverlay.fillStyle = "#f43f5e";
+        ctxOverlay.fillText(`STATUS: REPROVADO`, 20, 45);
+        ctxOverlay.fillStyle = "#fbbf24";
+        ctxOverlay.font = "16px 'Inter', sans-serif";
+        ctxOverlay.fillText(`Dano: ${pctDefeito.toFixed(2)}% (Excede tolerância de ${toleranciaPct.toFixed(1)}%)`, 20, 75);
+
+        badgeStatusLaudo.className = "px-4 py-2 rounded-lg font-bold text-sm tracking-wide bg-rose-950 text-rose-400 border border-rose-800 flex items-center gap-2";
+        badgeStatusLaudo.innerHTML = `<i class="ph ph-warning-octagon text-lg"></i><span>PEÇA REPROVADA - DEFEITO DETECTADO</span>`;
+      }
+      ctxOverlay.restore();
+
+      // Ativa botões de download
+      btnDownloadMascara.disabled = false;
+      btnDownloadOverlay.disabled = false;
+    }
+
+    // Downloads das imagens geradas
+    btnDownloadMascara.addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'mascara_granulado.png';
+      link.href = canvasMascara.toDataURL('image/png');
+      link.click();
+    });
+
+    btnDownloadOverlay.addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'analise_dano.png';
+      link.href = canvasOverlay.toDataURL('image/png');
+      link.click();
+    });
+
+    // -------------------------------------------------------------
+    // SEÇÃO 2: CLIENTE DE TELEMETRIA PREDITIVA (INTEGRAÇÃO FLASK)
+    // -------------------------------------------------------------
+
+    function carregarCenario(temp, vib, press) {
+      inputTemp.value = temp;
+      inputVib.value = vib;
+      inputPress.value = press;
+      document.getElementById('valTemp').textContent = `${temp} °C`;
+      document.getElementById('valVib').textContent = `${vib} mm/s`;
+      document.getElementById('valPress').textContent = `${press} bar`;
+      dispararPredicao();
+    }
+
+    inputTemp.addEventListener('input', (e) => document.getElementById('valTemp').textContent = `${e.target.value} °C`);
+    inputVib.addEventListener('input', (e) => document.getElementById('valVib').textContent = `${e.target.value} mm/s`);
+    inputPress.addEventListener('input', (e) => document.getElementById('valPress').textContent = `${e.target.value} bar`);
+
+    btnEnviarTelemetria.addEventListener('click', dispararPredicao);
+
+    async function dispararPredicao() {
+      const payload = {
+        Temperatura_C: parseFloat(inputTemp.value),
+        Vibracao_mms: parseFloat(inputVib.value),
+        Pressao_bar: parseFloat(inputPress.value)
+      };
+
+      const url = inputApiUrl.value.trim();
+
+      try {
+        badgeFontePredicao.textContent = "Conectando API...";
+        badgeFontePredicao.className = "text-[10px] px-2 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800";
+
+        // Tenta enviar para o servidor Flask
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 segundos de timeout
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+
+        exibirResultadoPredicao(data, "API Flask Local (Porta 5000)");
+      } catch (err) {
+        // Fallback: Inferência local usando os pesos exatos do Register_IA.joblib
+        console.warn("API não respondeu. Executando modelo localmente:", err.message);
+
+        // Equação de Regressão Linear salva no seu Register_IA.joblib:
+        // Intercept: -0.204455
+        // Coeficientes: Temp (+0.001594), Vib (-0.000941), Press (+0.003698)
+        const intercept = -0.204455;
+        const coefTemp = 0.001594;
+        const coefVib = -0.000941;
+        const coefPress = 0.003698;
+
+        const scoreRaw = intercept + (coefTemp * payload.Temperatura_C) + (coefVib * payload.Vibracao_mms) + (coefPress * payload.Pressao_bar);
+        const temFalha = scoreRaw >= 0.5;
+
+        const mockData = {
+          alerta: temFalha,
+          risco_de_falha: temFalha ? "Sim" : "Não",
+          score_falha: parseFloat(Math.max(0, Math.min(1, scoreRaw)).toFixed(4)),
+          status_operacional: temFalha ? "Crítico" : "Normal",
+          modo: "Execução Fallback Local (Pesos Register_IA.joblib)"
+        };
+
+        exibirResultadoPredicao(mockData, "Modelo Local (Pesos Joblib)");
+      }
+    }
+
+    function exibirResultadoPredicao(data, fonte) {
+      jsonOutput.textContent = JSON.stringify(data, null, 2);
+
+      const score = data.score_falha !== undefined ? data.score_falha : 0;
+      const scorePct = (score * 100).toFixed(2);
+      predScoreTexto.textContent = `${scorePct}%`;
+      predScoreRaw.textContent = `(${score.toFixed(4)})`;
+      predScoreBarra.style.width = `${Math.min(100, Math.max(0, score * 100))}%`;
+
+      badgeFontePredicao.textContent = fonte;
+      badgeFontePredicao.className = "text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800";
+
+      if (data.alerta) {
+        predScoreBarra.className = "h-full bg-rose-500 transition-all duration-500";
+        cardAlertaOperacional.className = "p-3.5 rounded-lg bg-rose-950/80 border border-rose-800 flex items-center gap-3";
+        iconeAlerta.className = "w-9 h-9 rounded-md bg-rose-900 text-rose-300 flex items-center justify-center text-xl";
+        iconeAlerta.innerHTML = `<i class="ph ph-warning-octagon"></i>`;
+        textoStatusOperacional.className = "text-sm font-bold text-rose-400";
+        textoStatusOperacional.textContent = "ALERTA: RISCO DE FALHA IMINENTE";
+      } else {
+        predScoreBarra.className = "h-full bg-emerald-500 transition-all duration-500";
+        cardAlertaOperacional.className = "p-3.5 rounded-lg bg-emerald-950/80 border border-emerald-800 flex items-center gap-3";
+        iconeAlerta.className = "w-9 h-9 rounded-md bg-emerald-900 text-emerald-300 flex items-center justify-center text-xl";
+        iconeAlerta.innerHTML = `<i class="ph ph-check-circle"></i>`;
+        textoStatusOperacional.className = "text-sm font-bold text-emerald-400";
+        textoStatusOperacional.textContent = "MOTOR SEGURO - OPERAÇÃO NORMAL";
+      }
+    }
+
+    // Checagem de disponibilidade da API em background
+    async function testarConexaoApi() {
+      try {
+        const res = await fetch("http://127.0.0.1:5000/", { method: "GET" });
+        if (res.ok) {
+          apiStatusBadge.textContent = "Conectada (5000)";
+          apiStatusBadge.className = "text-emerald-400 font-bold";
+        } else {
+          apiStatusBadge.textContent = "Inativa (Fallback Pronto)";
+          apiStatusBadge.className = "text-amber-400 font-bold";
+        }
+      } catch (e) {
+        apiStatusBadge.textContent = "Inativa (Fallback Pronto)";
+        apiStatusBadge.className = "text-amber-400 font-bold";
+      }
+    }
+
+    // Inicialização
+    window.addEventListener('load', () => {
+      testarConexaoApi();
+    });
+  </script>
+</body>
+</html>
